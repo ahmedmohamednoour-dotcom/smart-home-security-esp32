@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>home System project</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #e0f7fa;
+            color: #004d40;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+        }
+        .navbar {
+            width: 100%;
+            background-color: #00796b;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            position: fixed;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            padding: 10px 20px;
+            font-family: 'Verdana', sans-serif;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .navbar a:hover {
+            background-color: #004d40;
+        }
+        .container {
+            max-width: 800px;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            margin-top: 80px;
+            width: 100%;
+        }
+        h1 {
+            font-size: 32px;
+            color: #00796b;
+        }
+        .data-display {
+            background-color: #b2ebf2;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .data-item {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #555;
+        }
+        canvas {
+            max-width: 100%;
+            height: 300px;
+        }
+        .graph-section, #camera-section, #group-info {
+            display: none;
+        }
+        #group-info {
+            text-align: left;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f1f8e9;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #group-info p {
+            font-size: 18px;
+            color: #004d40;
+        }
+        #camera-section iframe {
+            width: 100%;
+            height: 480px;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        .graph-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <a href="javascript:void(0);" onclick="showHome()">Home</a>
+        <a href="javascript:void(0);" onclick="showGraph('all')">All Graphs</a>
+        <a href="javascript:void(0);" onclick="showCamera()">Camera</a>
+        <a href="javascript:void(0);" onclick="showGroupInfo()">Group Info</a>
+    </div>
+
+    <div class="container">
+        <h1>home System Display</h1> 
+
+        <!-- Home Section -->
+        <div id="home">
+            <div class="data-display" id="data-display">
+                <div class="data-item"><strong>Temperature:</strong> <span id="temperature">Loading...</span> °C</div>
+                <div class="data-item"><strong>Humidity:</strong> <span id="humidity">Loading...</span> %</div>
+                <div class="data-item"><strong>Butane Rate:</strong> <span id="alcohol">Loading...</span> %</div>
+                <div class="data-item"><strong>Light Intensity:</strong> <span id="light_intensity">Loading...</span></div>
+                <div class="data-item"><strong>Timestamp:</strong> <span id="timestamp">Loading...</span></div>
+                <div class="footer">Data updated every 30 seconds.</div>
+            </div>
+        </div>
+
+        <!-- All Graphs Section -->
+        <div id="allGraph" class="graph-section">
+            <div class="graph-grid">
+                <canvas id="temperatureChart"></canvas>
+                <canvas id="humidityChart"></canvas>
+                <canvas id="alcoholChart"></canvas>
+                <canvas id="lightChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Camera Section -->
+        <div id="camera-section">
+            <h2>Live Camera Stream</h2>
+            <iframe src="http://192.168.1.3" allowfullscreen></iframe>
+        </div>
+
+        <!-- Group Info Section -->
+        <div id="group-info">
+            <h3>About the Research Group</h3>
+            <p>Project team information goes here.</p>
+        </div>
+    </div>
+
+    <script>
+        const temperatureData = [];
+        const humidityData = [];
+        const alcoholData = [];
+        const lightData = [];
+        const timestamps = [];
+
+        const temperatureChart = new Chart(document.getElementById('temperatureChart'), {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [{
+                    label: 'Temperature (°C)',
+                    data: temperatureData,
+                    borderColor: 'red',
+                    borderWidth: 4,
+                    fill: false
+                }]
+            }
+        });
+
+        const humidityChart = new Chart(document.getElementById('humidityChart'), {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [{
+                    label: 'Humidity (%)',
+                    data: humidityData,
+                    borderColor: 'blue',
+                    borderWidth: 4,
+                    fill: false
+                }]
+            }
+        });
+
+        const alcoholChart = new Chart(document.getElementById('alcoholChart'), {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [{
+                    label: 'Butane Rate (%)',
+                    data: alcoholData,
+                    borderColor: 'green',
+                    borderWidth: 4,
+                    fill: false
+                }]
+            }
+        });
+
+        const lightChart = new Chart(document.getElementById('lightChart'), {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [{
+                    label: 'Light Intensity',
+                    data: lightData,
+                    borderColor: 'orange',
+                    borderWidth: 4,
+                    fill: false
+                }]
+            }
+        });
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/data');
+                const data = await response.json();
+
+                document.getElementById('temperature').innerText = data.temperature;
+                document.getElementById('humidity').innerText = data.humidity;
+                document.getElementById('alcohol').innerText = data.alcohol;
+                document.getElementById('light_intensity').innerText = data.light_intensity;
+                document.getElementById('timestamp').innerText = data.timestamp;
+
+                timestamps.push(data.timestamp);
+                temperatureData.push(data.temperature);
+                humidityData.push(data.humidity);
+                alcoholData.push(data.alcohol);
+                lightData.push(data.light_intensity);
+
+                if (timestamps.length > 30) {
+                    timestamps.shift();
+                    temperatureData.shift();
+                    humidityData.shift();
+                    alcoholData.shift();
+                    lightData.shift();
+                }
+
+                temperatureChart.update();
+                humidityChart.update();
+                alcoholChart.update();
+                lightChart.update();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function showHome() {
+            hideAllSections();
+            document.getElementById('home').style.display = 'block';
+        }
+
+        function showGraph(graphName) {
+            hideAllSections();
+            if (graphName === 'all') {
+                document.getElementById('allGraph').style.display = 'block';
+            }
+        }
+
+        function showCamera() {
+            hideAllSections();
+            document.getElementById('camera-section').style.display = 'block';
+        }
+
+        function showGroupInfo() {
+            hideAllSections();
+            document.getElementById('group-info').style.display = 'block';
+        }
+
+        function hideAllSections() {
+            const sections = document.querySelectorAll('.container > div');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+        }
+
+        setInterval(fetchData, 30000);
+        showHome();
+    </script>
+</body>
+</html>
